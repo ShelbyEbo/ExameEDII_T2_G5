@@ -1,0 +1,41 @@
+Responsável pelo Sistema de Ficheiros e Compressão
+
+Módulo de Ficheiros
+
+- Estrutura File
+- Lista de ficheiros por utilizador
+- Adicionar ficheiro
+- Remover ficheiro
+- Listar ficheiros
+- Procurar ficheiro por ID
+
+Compressão Huffman
+
+- Tabela de frequências
+- Implementação da Min Heap
+- Construção da árvore de Huffman
+- Compressão
+- Descompressão
+
+Estatísticas de Compressão
+
+- Tamanho original
+- Tamanho comprimido
+- Percentagem de compressão
+
+Persistência (Opcional caso haja tempo)
+
+- Guardar utilizadores
+- Guardar ficheiros
+- Carregar dados
+
+Entregáveis
+
+- file.h
+- file.c
+- huffman.h
+- huffman.c
+- heap.h
+- heap.c
+- storage.h
+- storage.c
