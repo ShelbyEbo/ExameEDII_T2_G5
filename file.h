@@ -18,7 +18,7 @@ typedef struct file_list
     struct file_list *next;
 } FileList;
 
-FileList *adicionar_ficheiro(FileList *head, int id, const char *name, const char *filepath); 
+FileList *adicionar_ficheiro(FileList *head, int id, const char *name, FILE *filepath);
 FileList *remover_ficheiro(FileList *head, int id);
 void listar_ficheiros(FileList *head);
 File *procurar_por_id(FileList *head, int id);

@@ -54,6 +54,9 @@ Auth *init_auth()
     if (!auth)
         return NULL;
     auth->users = NULL;
+    auth->message = NULL;
+    auth->chat = NULL;
+    auth->graph = NULL;
     auth->current_user = NULL;
     return auth;
 }

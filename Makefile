@@ -4,8 +4,16 @@ CFLAGS = -Wall -Wextra -Werror
 
 SRCS = auth.c \
 	avl.c \
+	chat.c \
+	file.c \
+	graph.c \
+	heap.c \
+	huffman.c \
 	main.c \
 	presentation.c \
+	presentation2.c \
+	report.c \
+	storage.c \
 	user.c
 
 OBJS = $(SRCS:.c=.o)

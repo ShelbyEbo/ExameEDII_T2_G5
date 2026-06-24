@@ -167,6 +167,7 @@ void print_menu(Auth *auth)
     printf("4. Listar utilizadores\n");
     printf("5. Bloquear utilizador\n");
     printf("6. Desbloquear utilizador\n");
+    printf("33. Menu2\n");
     printf("\n-- Sessão --\n");
     printf("7. Login\n");
     printf("8. Logout\n");
