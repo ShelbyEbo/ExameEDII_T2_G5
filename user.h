@@ -10,7 +10,7 @@ typedef struct User
     int     id;
     int     blocked;
     char    name[100];
-    File    *files;
+    FileList    *files;
     // Message *inbox;
     // Share   *shares;
 } User;
