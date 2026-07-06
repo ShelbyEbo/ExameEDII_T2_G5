@@ -8,6 +8,7 @@ SRCS    = srcs/auth.c        \
           srcs/file.c        \
           srcs/heap.c        \
           srcs/huffman.c     \
+          srcs/free.c     \
           srcs/storage.c     \
           srcs/chat.c        \
           srcs/graph.c       \

@@ -1,12 +1,5 @@
 #include "main.h"
 
-void free_everything(Auth *auth)
-{
-    remover_diretorio("compress"); 
-    remover_diretorio("decompress"); 
-    printf("A sair...\n"); 
-}
-
 int main(void)
 {
     Auth *auth = init_auth();

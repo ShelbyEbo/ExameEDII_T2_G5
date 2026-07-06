@@ -8,5 +8,6 @@
 # include "user.h"
 # include "menus.h"
 # include "menus_aux.h"
+# include "free.h"
 
 #endif
