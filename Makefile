@@ -2,21 +2,6 @@ NAME    = exame
 CC      = cc
 CFLAGS  = -Wall -Wextra -Werror -I includes
 
-<<<<<<< HEAD
-SRCS = auth.c \
-	avl.c \
-	chat.c \
-	file.c \
-	graph.c \
-	heap.c \
-	huffman.c \
-	main.c \
-	presentation.c \
-	presentation2.c \
-	report.c \
-	storage.c \
-	user.c
-=======
 SRCS    = srcs/auth.c        \
           srcs/avl.c         \
           srcs/user.c        \
@@ -33,7 +18,6 @@ SRCS    = srcs/auth.c        \
           srcs/menu_chat_aux.c \
           srcs/menu_graphs_aux.c \
           srcs/main.c
->>>>>>> 8b4f1014795bc3245c8d0ce4b8dc317e1135bbdf
 
 OBJS    = $(SRCS:srcs/%.c=obj/%.o)
 
