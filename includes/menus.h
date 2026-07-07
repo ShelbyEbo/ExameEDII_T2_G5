@@ -6,7 +6,12 @@
 # include <string.h>
 # include <sys/stat.h>
 # include <errno.h>
-# include <direct.h>
+#ifdef _WIN32
+ # include <direct.h>
+#else
+ #include <sys/stat.h>
+ #include <sys/types.h>
+#endif
 # include "free.h"
 
 typedef struct Auth Auth;
