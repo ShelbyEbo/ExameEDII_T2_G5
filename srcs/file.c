@@ -69,3 +69,17 @@ File *procurar_por_id(FileList *head, int id)
     }
     return (NULL);
 }
+
+int max_file_id(FileList *head)
+{
+    int max = 0;
+    FileList *aux = head;
+
+    while (aux)
+    {
+        if (aux->file->id > max)
+            max = aux->file->id;
+        aux = aux->next;
+    }
+    return max;
+}

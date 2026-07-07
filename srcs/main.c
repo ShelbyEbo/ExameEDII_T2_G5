@@ -63,6 +63,7 @@ int main(void)
             case 14: if (!menu_chat(auth))         running = 0; break;
             case 15: if (!menu_graph(auth))        running = 0; break;
             case 16: if (!menu_reports(auth))      running = 0; break;
+            case 17: clear_screen();                            break;
             case  0: free_everything(auth); break;
             default: printf("Opção inválida.\n");               break;
         }

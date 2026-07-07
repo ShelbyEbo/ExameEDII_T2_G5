@@ -22,5 +22,6 @@ FileList *adicionar_ficheiro(FileList *head, int id, const char *name, FILE *fil
 FileList *remover_ficheiro(FileList *head, int id);
 void listar_ficheiros(FileList *head);
 File *procurar_por_id(FileList *head, int id);
+int max_file_id(FileList *head);
 
 #endif

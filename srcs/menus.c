@@ -297,9 +297,17 @@ int menu_huffman_compress_file(Auth *auth)
     fclose(in);
     fclose(out);
     free_arvore(raiz);
+
+    /* Adicionar ficheiro comprimido à lista do utilizador */
+    char huff_name[512];
+    snprintf(huff_name, sizeof(huff_name), "%s.huff", output);
+    int new_id = max_file_id(auth->current_user->files) + 1;
+    auth->current_user->files = adicionar_ficheiro(
+        auth->current_user->files, new_id, huff_name, fopen(caminho, "a"));
+
     printf("\nFicheiro comprimido com sucesso.\n");
     printf("Entrada : %s\n", input);
-    printf("Saída   : %s\n", output);
+    printf("Saída   : %s (ID %d)\n", huff_name, new_id);
     return 1;
 }
 
@@ -373,9 +381,14 @@ int menu_huffman_decompress_file(Auth *auth)
         fclose(in);
         fclose(out);
         free_arvore(raiz);
+
+        int new_id = max_file_id(auth->current_user->files) + 1;
+        auth->current_user->files = adicionar_ficheiro(
+            auth->current_user->files, new_id, output, fopen(caminho, "a"));
+
         printf("\nFicheiro recuperado com sucesso.\n");
         printf("Entrada : %s\n", input);
-        printf("Saída   : %s\n", output);
+        printf("Saída   : %s (ID %d)\n", output, new_id);
 
         return 1;
     }
@@ -408,9 +421,14 @@ int menu_huffman_decompress_file(Auth *auth)
     fclose(in);
     fclose(out);
     free_arvore(raiz);
+
+    int new_id = max_file_id(auth->current_user->files) + 1;
+    auth->current_user->files = adicionar_ficheiro(
+        auth->current_user->files, new_id, output, fopen(caminho, "a"));
+
     printf("\nFicheiro recuperado com sucesso.\n");
     printf("Entrada : %s\n", input);
-    printf("Saída   : %s\n", output);
+    printf("Saída   : %s (ID %d)\n", output, new_id);
     printf("Bytes recuperados: %ld\n", tamanhoOriginal);
 
     return 1;
@@ -656,6 +674,8 @@ void print_menu(Auth *auth)
 
     printf("\n-- Relatórios --\n");
     printf("16. Relatórios\n");
+
+    printf("\n17. Limpar ecrã\n");
 
     printf("\n 0. Sair\n");
     printf("Opção: ");
