@@ -5,7 +5,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-// INICIALIZAÇÃO / DESTRUIÇÃO
+/* ── Utilitário interno: índice do User no grafo ── */
+static int user_index(const ShareGraph *g, const User *user)
+{
+    for (int i = 0; i < g->user_count; i++)
+        if (g->users[i] == user)
+            return i;
+    return -1;
+}
+
+/* ════════════════════════════════════════════════════════════
+ * INICIALIZAÇÃO / DESTRUIÇÃO
+ * ════════════════════════════════════════════════════════════ */
+
 void graph_init(ShareGraph *g)
 {
     g->user_count = 0;
@@ -25,31 +37,36 @@ void graph_destroy(ShareGraph *g)
         while (cur)
         {
             Share *tmp = cur->next;
+            if (cur->file)
+            {
+                free(cur->file->name);
+                free(cur->file);
+            }
             free(cur);
             cur = tmp;
         }
         g->adj[i] = NULL;
-        free(g->users[i]);
         g->users[i] = NULL;
     }
     g->user_count = 0;
     g->total_shares = 0;
 }
 
-// GESTÃO DE UTILIZADORES
+/* ════════════════════════════════════════════════════════════
+ * GESTÃO DE UTILIZADORES
+ * ════════════════════════════════════════════════════════════ */
+
 int graph_find_user(const ShareGraph *g, const User *user)
 {
-    for (int i = 0; i < g->user_count; i++)
-    {
-        if (g->users[i] == user)
-            return i;
-    }
-    return -1;
+    return user_index(g, user);
 }
 
 int graph_add_user(ShareGraph *g, User *user)
 {
-    int idx = graph_find_user(g, user);
+    if (!user)
+        return -1;
+
+    int idx = user_index(g, user);
     if (idx >= 0)
         return idx;
 
@@ -65,21 +82,25 @@ int graph_add_user(ShareGraph *g, User *user)
     return idx;
 }
 
-// REGISTO DE PARTILHAS
-int graph_add_share(ShareGraph *g,
-                    User *from, User *to,
-                    File *file)
+/* ════════════════════════════════════════════════════════════
+ * REGISTO DE PARTILHAS
+ * ════════════════════════════════════════════════════════════ */
+
+int graph_add_share(ShareGraph *g, User *from, User *to, File *file)
 {
-    int from_id = graph_add_user(g, from);
-    int to_id = graph_add_user(g, to);
-    if (from_id < 0 || to_id < 0)
+    if (!from || !to || !file)
         return -1;
 
-    if (to->blocked || from->blocked)
+    if (from->blocked || to->blocked)
     {
-        fprintf(stderr, "[Graph] Um dos utilizadores está bloqueado.\n");
+        fprintf(stderr, "[Graph] Um dos utilizadores esta bloqueado.\n");
         return -1;
     }
+
+    int from_idx = graph_add_user(g, from);
+    int to_idx = graph_add_user(g, to);
+    if (from_idx < 0 || to_idx < 0)
+        return -1;
 
     Share *s = (Share *)malloc(sizeof(Share));
     if (!s)
@@ -87,95 +108,115 @@ int graph_add_share(ShareGraph *g,
 
     s->from = from;
     s->to = to;
-    s->file = (File *)malloc(sizeof(File));
+
+    s->file = (File *)calloc(1, sizeof(File));
     if (!s->file)
     {
         free(s);
         return -1;
     }
-    s->file->name = strdup(file->name);
+    s->file->name = strdup(file->name ? file->name : "");
 
-    s->next = g->adj[from_id];
-    g->adj[from_id] = s;
+    s->next = g->adj[from_idx];
+    g->adj[from_idx] = s;
 
     g->total_shares++;
-    printf("[Graph] Partilha registada: %s -> %s (%s)\n", from->name, to->name, file->name);
+    printf("[Graph] Partilha: %s -> %s (%s)\n",
+           from->name, to->name, file->name ? file->name : "?");
     return 0;
 }
 
-// IMPRESSÃO DO GRAFO
+/* ════════════════════════════════════════════════════════════
+ * IMPRESSÃO DO GRAFO
+ * ════════════════════════════════════════════════════════════ */
+
 void graph_print(const ShareGraph *g)
 {
     printf("\n+----------------------------------------------+\n");
     printf("|       Grafo de Partilhas                     |\n");
     printf("+----------------------------------------------+\n");
+
     for (int i = 0; i < g->user_count; i++)
     {
+        if (!g->users[i])
+            continue;
         printf("  %s:\n", g->users[i]->name);
+
         Share *cur = g->adj[i];
         if (!cur)
         {
             printf("    (sem partilhas)\n");
             continue;
         }
+
         while (cur)
         {
-            printf("    -> %s  [%s]\n",
-                   g->users[cur->to->id]->name, cur->file->name);
+            if (cur->to && cur->file && cur->file->name)
+                printf("    -> %s [%s]\n", cur->to->name, cur->file->name);
+            else
+                printf("    -> [partilha invalida]\n");
             cur = cur->next;
         }
     }
     printf("+----------------------------------------------+\n\n");
 }
 
-// DFS  (Depth-First Search)
+/* ════════════════════════════════════════════════════════════
+ * DFS  (Depth-First Search)
+ * ════════════════════════════════════════════════════════════ */
+
 static void dfs_visit(const ShareGraph *g, int v, int *visited, int depth)
 {
     visited[v] = 1;
     for (int i = 0; i < depth; i++)
         printf("  ");
-    printf("└─ %s\n", g->users[v]->name);
+    printf("|-- %s\n", g->users[v]->name);
 
     Share *cur = g->adj[v];
     while (cur)
     {
-        if (!visited[cur->to->id])
-            dfs_visit(g, cur->to->id, visited, depth + 1);
+        if (cur->to)
+        {
+            int to_idx = user_index(g, cur->to);
+            if (to_idx >= 0 && !visited[to_idx])
+                dfs_visit(g, to_idx, visited, depth + 1);
+        }
         cur = cur->next;
     }
 }
 
 void graph_dfs(const ShareGraph *g, const User *start_user)
 {
-    int start = graph_find_user(g, start_user);
+    int start = user_index(g, start_user);
     if (start < 0)
     {
-        printf("[DFS] Utilizador '%s' não encontrado.\n", start_user->name);
+        if (start_user)
+            printf("[DFS] Utilizador '%s' nao encontrado.\n", start_user->name);
         return;
     }
 
     int visited[MAX_USERS] = {0};
-    printf("\n+----------------------------------------------+\n");
-    printf("|       DFS a partir de '%s'               |\n", start_user->name);
-    printf("+----------------------------------------------+\n");
+    printf("\n--- DFS a partir de '%s' ---\n", start_user->name);
     dfs_visit(g, start, visited, 0);
 
-    /* visita componentes desconexos se existirem */
     for (int i = 0; i < g->user_count; i++)
-    {
         if (!visited[i])
             dfs_visit(g, i, visited, 0);
-    }
-    printf("+----------------------------------------------+\n\n");
+
+    printf("-----------------------------\n\n");
 }
 
-// BFS  (Breadth-First Search)
+/* ════════════════════════════════════════════════════════════
+ * BFS  (Breadth-First Search)
+ * ════════════════════════════════════════════════════════════ */
+
 void graph_bfs(const ShareGraph *g, const User *start_user)
 {
-    int start = graph_find_user(g, start_user);
+    int start = user_index(g, start_user);
     if (start < 0)
     {
-        printf("[BFS] Utilizador '%s' não encontrado.\n", start_user->name);
+        if (start_user)
+            printf("[BFS] Utilizador '%s' nao encontrado.\n", start_user->name);
         return;
     }
 
@@ -186,9 +227,7 @@ void graph_bfs(const ShareGraph *g, const User *start_user)
     visited[start] = 1;
     queue[tail++] = start;
 
-    printf("\n+----------------------------------------------+\n");
-    printf("|       BFS a partir de '%s'               |\n", start_user->name);
-    printf("+----------------------------------------------+\n");
+    printf("\n--- BFS a partir de '%s' ---\n", start_user->name);
 
     while (head < tail)
     {
@@ -198,10 +237,14 @@ void graph_bfs(const ShareGraph *g, const User *start_user)
         Share *cur = g->adj[v];
         while (cur)
         {
-            if (!visited[cur->to->id])
+            if (cur->to)
             {
-                visited[cur->to->id] = 1;
-                queue[tail++] = cur->to->id;
+                int to_idx = user_index(g, cur->to);
+                if (to_idx >= 0 && !visited[to_idx])
+                {
+                    visited[to_idx] = 1;
+                    queue[tail++] = to_idx;
+                }
             }
             cur = cur->next;
         }
@@ -220,16 +263,20 @@ void graph_bfs(const ShareGraph *g, const User *start_user)
                 Share *cur = g->adj[v];
                 while (cur)
                 {
-                    if (!visited[cur->to->id])
+                    if (cur->to)
                     {
-                        visited[cur->to->id] = 1;
-                        queue[tail++] = cur->to->id;
-                        printf("  Visita: %s\n", g->users[cur->to->id]->name);
+                        int to_idx = user_index(g, cur->to);
+                        if (to_idx >= 0 && !visited[to_idx])
+                        {
+                            visited[to_idx] = 1;
+                            queue[tail++] = to_idx;
+                            printf("  Visita: %s\n", g->users[to_idx]->name);
+                        }
                     }
                     cur = cur->next;
                 }
             }
         }
     }
-    printf("+----------------------------------------------+\n\n");
+    printf("-----------------------------\n\n");
 }

@@ -236,3 +236,13 @@ AVL *delete_user(AVL *root, int id)
 
     return root;
 }
+
+void avl_destroy(AVL *root)
+{
+    if (!root)
+        return;
+    avl_destroy(root->left);
+    avl_destroy(root->right);
+    destroy_user(root->user);
+    free(root);
+}
