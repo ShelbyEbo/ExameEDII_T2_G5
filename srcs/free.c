@@ -9,20 +9,27 @@ void free_arvore(No *raiz)
     free(raiz);
 }
 
+static void cleanup_user_dirs(AVL *node)
+{
+    if (!node)
+        return;
+    cleanup_user_dirs(node->left);
+    cleanup_user_dirs(node->right);
+    if (node->user && node->user->name[0] != '\0')
+    {
+        DIR *d = opendir(node->user->name);
+        if (d)
+        {
+            closedir(d);
+            remover_diretorio(node->user->name);
+        }
+    }
+}
+
 void free_everything(Auth *auth)
 {
     if (!auth)
         return;
-    if (auth->users && auth->users->user && auth->users->user->files)
-    {
-        FileList *files = auth->users->user->files;
-        while (files != NULL)
-        {
-            remover_ficheiro(files, files->file->id);
-            files = files->next;
-        }
-    }
-    if (auth->users && auth->users->user && auth->users->user->name && opendir(auth->users->user->name))
-        remover_diretorio(auth->users->user->name);
+    cleanup_user_dirs(auth->users);
     printf("A sair...\n");
 }

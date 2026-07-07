@@ -21,5 +21,20 @@ void destroy_user(User *user)
 {
     if (!user)
         return;
+    FileList *f = user->files;
+    while (f)
+    {
+        FileList *next = f->next;
+        if (f->file)
+        {
+            if (f->file->filepath)
+                fclose(f->file->filepath);
+            free(f->file->name);
+            free(f->file);
+        }
+        free(f);
+        f = next;
+    }
+    user->files = NULL;
     free(user);
 }

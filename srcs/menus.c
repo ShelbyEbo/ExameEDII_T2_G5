@@ -135,11 +135,11 @@ int menu_add_file(Auth *auth)
 
     int id;
     char name[256];
-    int resultado = MKDIR(auth->users->user->name);
+    int resultado = MKDIR(auth->current_user->name);
 
     if (resultado != 0 && errno != EEXIST)
     {
-        printf("Erro ao criar o diretório %s\n", auth->users->user->name);
+        printf("Erro ao criar o diretório %s\n", auth->current_user->name);
         return 1;
     }
     if (get_int("ID do ficheiro: ", &id) != 1)
@@ -152,7 +152,7 @@ int menu_add_file(Auth *auth)
     if (get_line("Nome do ficheiro: ", name, sizeof(name)) != 1)
         return 0;
     char caminho[512];
-    snprintf(caminho, sizeof(caminho), "%s/%s", auth->users->user->name, name);
+    snprintf(caminho, sizeof(caminho), "%s/%s", auth->current_user->name, name);
     auth->current_user->files = adicionar_ficheiro(auth->current_user->files, id, name, fopen(caminho, "a"));
     printf("Ficheiro '%s' adicionado.\n", name);
     return 1;
@@ -171,11 +171,6 @@ int menu_remove_file(Auth *auth)
     if (get_int("ID do ficheiro a remover: ", &id) != 1)
         return 0;
 
-    if (!procurar_por_id(auth->current_user->files, id))
-    {
-        printf("Ficheiro não encontrado.\n");
-        return 1;
-    }
     File *curr = procurar_por_id(auth->current_user->files, id);
     if (!curr)
     {
@@ -183,7 +178,7 @@ int menu_remove_file(Auth *auth)
         return 1;
     }
     char caminho[512];
-    snprintf(caminho, sizeof(caminho), "%s/%s", auth->users->user->name, curr->name);
+    snprintf(caminho, sizeof(caminho), "%s/%s", auth->current_user->name, curr->name);
     auth->current_user->files = remover_ficheiro(auth->current_user->files, id);
     remove(caminho);
     printf("Ficheiro removido.\n");
@@ -208,15 +203,19 @@ int menu_list_files(Auth *auth)
 
 int menu_huffman_compress_file(Auth *auth)
 {
-    (void)auth;
+    if (!auth->current_user)
+    {
+        printf("Faça login primeiro.\n");
+        return 1;
+    }
 
     char input[256];
     char output[256];
-    int resultado = MKDIR(auth->users->user->name);
+    int resultado = MKDIR(auth->current_user->name);
 
     if (resultado != 0 && errno != EEXIST)
     {
-        printf("Erro ao criar o diretório %s\n", auth->users->user->name);
+        printf("Erro ao criar o diretório %s\n", auth->current_user->name);
         return 1;
     }
     if (get_line("Ficheiro de entrada: ", input, sizeof(input)) != 1)
@@ -254,11 +253,12 @@ int menu_huffman_compress_file(Auth *auth)
     printf("\nTabela de códigos:\n");
     gerarCodigos(raiz, codigo, 0);
     char caminho[512];
-    snprintf(caminho, sizeof(caminho), "%s/%s.huff", auth->users->user->name, output);
+    snprintf(caminho, sizeof(caminho), "%s/%s.huff", auth->current_user->name, output);
     FILE *out = fopen(caminho, "ab");
     if (!out)
     {
         fclose(in);
+        free_arvore(raiz);
         printf("Erro ao criar %s\n", output);
         return 1;
     }
@@ -305,15 +305,19 @@ int menu_huffman_compress_file(Auth *auth)
 
 int menu_huffman_decompress_file(Auth *auth)
 {
-    (void)auth;
+    if (!auth->current_user)
+    {
+        printf("Faça login primeiro.\n");
+        return 1;
+    }
 
     char input[256];
     char output[256];
-    int resultado = MKDIR(auth->users->user->name);
+    int resultado = MKDIR(auth->current_user->name);
 
     if (resultado != 0 && errno != EEXIST)
     {
-        printf("Erro ao criar o diretório %s\n", auth->users->user->name);
+        printf("Erro ao criar o diretório %s\n", auth->current_user->name);
         return 1;
     }
     if (get_line("Ficheiro de entrada (caminho completo do ficheiro + .huff)\nEx: (compress/ficheiro.huff): ", input, sizeof(input)) != 1)
@@ -352,11 +356,12 @@ int menu_huffman_decompress_file(Auth *auth)
         return 1;
     }
     char caminho[512];
-    snprintf(caminho, sizeof(caminho), "%s/%s", auth->users->user->name, output);
+    snprintf(caminho, sizeof(caminho), "%s/%s", auth->current_user->name, output);
     FILE *out = fopen(caminho, "ab");
     if (!out)
     {
         fclose(in);
+        free_arvore(raiz);
         printf("Erro ao criar %s\n", output);
         return 1;
     }
@@ -367,6 +372,7 @@ int menu_huffman_decompress_file(Auth *auth)
 
         fclose(in);
         fclose(out);
+        free_arvore(raiz);
         printf("\nFicheiro recuperado com sucesso.\n");
         printf("Entrada : %s\n", input);
         printf("Saída   : %s\n", output);
